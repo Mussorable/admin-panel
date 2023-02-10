@@ -16,23 +16,27 @@ document.querySelectorAll(".navi-button").forEach(button => {
             const BaseURL = `https://spokiy-cofee-ua-default-rtdb.europe-west1.firebasedatabase.app/`;
             const endpoint = `menu.json`;
 
-            loadMenu();
+            loadMenu(BaseURL, endpoint);
 
             const API = new FetchWrapper(BaseURL);
 
-            document.querySelector("#send-button").addEventListener("click", event => {
+            document.querySelector("#set-menu-form").addEventListener("submit", event => {
+                event.preventDefault();
                 API.post(endpoint, {
                     element: {
-                        name: document.querySelector("#element-name").value
+                        name: document.querySelector("#element-name").value,
+                        price: document.querySelector("#element-price").value,
+                        value: document.querySelector("#element-value")?.value
                     }
                 }).then(response => {
                     console.log(response);
                 });
             });
 
+            // remove
             document.querySelector("#get-button").addEventListener("click", event => {
                 API.get(endpoint).then(data => {
-                    Object.values(data).forEach(item => {
+                    Object.values(data ? data : false).forEach(item => {
                         console.log(item.element.name);
                     })
                 })
@@ -41,13 +45,39 @@ document.querySelectorAll(".navi-button").forEach(button => {
     });
 })
 
-const loadMenu = () => {
-    loadMenuContent();
+const loadMenu = (BaseURL, endpoint) => {
+    loadMenuContent(BaseURL, endpoint);
     loadMenuEdit();
 }
 
-const loadMenuContent = () => {
+const loadMenuContent = (BaseURL, endpoint) => {
+    const API = new FetchWrapper(BaseURL);
+    const div = document.createElement("div");
+    div.classList.add("region-container");
+    div.setAttribute("id", "get-menu");
+    const table = document.createElement("table");
+
     
+    document.querySelector("#main-screen").appendChild(div);
+    div.appendChild(table);
+    table.insertAdjacentHTML("afterbegin", `
+        <tr>
+            <th>Элемент</th>
+            <th>Цена</th> 
+            <th>Значение</th>
+        </tr>
+    `);
+    API.get(endpoint).then(data => {
+        Object.values(data ? data : false).forEach(item => {
+            table.insertAdjacentHTML("beforeend", `
+                <tr>
+                    <td>${item.element.name}</td>
+                    <td>${item.element.price}</td>
+                    <td>${item.element.value}</td>
+                </tr>
+            `);
+        });
+    })
 }
 
 const loadMenuEdit = () => {
@@ -57,6 +87,10 @@ const loadMenuEdit = () => {
     const h2 = document.createElement("h2");
     h2.textContent = "Добавить элемент";
     const label = document.createElement("label");
+    const div2 = document.createElement("div");
+    div2.classList.add("input-container");
+    const form = document.createElement("form");
+    form.setAttribute("id", "set-menu-form");
     label.setAttribute("for", "element-name");
     const inputField = document.createElement("input");
     const inputAttributes = {
@@ -69,8 +103,31 @@ const loadMenuEdit = () => {
     for (const attribute in inputAttributes) {
         inputField.setAttribute(attribute, inputAttributes[attribute]);
     }
+    const priceField = document.createElement("input");
+    priceField.style.width = "70px";
+    const priceFieldAttributes = {
+        placeholder: "Цена",
+        id: "element-price",
+        minlength: 1,
+        required: "required"
+    }
+    for (const attribute in priceFieldAttributes) {
+        priceField.setAttribute(attribute, priceFieldAttributes[attribute]);
+    }
+    const valueField = document.createElement("input");
+    valueField.style.width = "70px";
+    const valueFieldAttributes = {
+        placeholder: "Вес",
+        id: "element-value",
+        minlength: 1
+    }
+    for (const attribute in valueFieldAttributes) {
+        valueField.setAttribute(attribute, valueFieldAttributes[attribute]);
+    }
+
     const saveButton = document.createElement("button");
     saveButton.setAttribute("id", "send-button");
+    saveButton.setAttribute("type", "submit");
     // REMOVE
     const getButton = document.createElement("button");
     getButton.setAttribute("id", "get-button");
@@ -79,13 +136,16 @@ const loadMenuEdit = () => {
     saveButton.textContent = "Отправить";
 
     document.querySelector("#main-screen").appendChild(div);
-    const setElemContainer = document.querySelector("#set-element-container");
-    setElemContainer.appendChild(h2);
-    setElemContainer.appendChild(label);
-    setElemContainer.appendChild(inputField);
-    setElemContainer.appendChild(saveButton);
+    div.appendChild(h2);
+    div.appendChild(div2)
+        .appendChild(form)
+        .appendChild(label)
+        .appendChild(inputField);
+    form.appendChild(priceField);
+    form.appendChild(valueField);
+    form.appendChild(saveButton);
     // REMOVE
-    setElemContainer.appendChild(getButton);
+    div.appendChild(getButton);
 }
 
 const loadPromotions = () => {

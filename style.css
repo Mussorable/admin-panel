@@ -27,3 +27,11 @@ header > nav > ul {
 header > nav > ul > li > button {
     padding: 2rem 5rem;
 }
+
+main table, th, td {
+    border: 1px solid black;
+}
+
+th, td {
+    padding: 0 15px;
+}
