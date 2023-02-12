@@ -15,43 +15,19 @@ document.querySelectorAll(".navi-button").forEach(button => {
         if (button.getAttribute("function").includes("menu")) {
             const BaseURL = `https://spokiy-cofee-ua-default-rtdb.europe-west1.firebasedatabase.app/`;
             const endpoint = `menu.json`;
-
-            loadMenu(BaseURL, endpoint);
-
             const API = new FetchWrapper(BaseURL);
 
-            document.querySelector("#set-menu-form").addEventListener("submit", event => {
-                event.preventDefault();
-                API.post(endpoint, {
-                    element: {
-                        name: document.querySelector("#element-name").value,
-                        price: document.querySelector("#element-price").value,
-                        value: document.querySelector("#element-value")?.value
-                    }
-                }).then(response => {
-                    console.log(response);
-                });
-            });
-
-            // remove
-            document.querySelector("#get-button").addEventListener("click", event => {
-                API.get(endpoint).then(data => {
-                    Object.values(data ? data : false).forEach(item => {
-                        console.log(item.element.name);
-                    })
-                })
-            })
+            loadMenu(endpoint, API);
         }
     });
 })
 
-const loadMenu = (BaseURL, endpoint) => {
-    loadMenuContent(BaseURL, endpoint);
-    loadMenuEdit();
+const loadMenu = (endpoint, API) => {
+    loadMenuContent(endpoint, API);
+    loadMenuEdit(endpoint, API);
 }
 
-const loadMenuContent = (BaseURL, endpoint) => {
-    const API = new FetchWrapper(BaseURL);
+const loadMenuContent = (endpoint, API) => {
     const div = document.createElement("div");
     div.classList.add("region-container");
     div.setAttribute("id", "get-menu");
@@ -80,7 +56,29 @@ const loadMenuContent = (BaseURL, endpoint) => {
     })
 }
 
-const loadMenuEdit = () => {
+const loadMenuEdit = (endpoint, API) => {
+    addItem();
+    editItem(endpoint, API);
+    
+    document.querySelector("#set-menu-form").addEventListener("submit", event => {
+        event.preventDefault();
+        API.post(endpoint, {
+            element: {
+                name: document.querySelector("#element-name").value,
+                price: document.querySelector("#element-price").value,
+                value: document.querySelector("#element-value")?.value
+            }
+        }).then(response => {location.reload()});
+    });
+
+    document.querySelector("#delete-button").addEventListener("click", event => {
+        event.preventDefault();
+        loadAlert(`Удалить элемент: `, endpoint, API);
+        document.querySelector(".alert-container").classList.add("visible");
+    });
+}
+
+const addItem = () => {
     const div = document.createElement("div");
     div.classList.add("region-container");
     div.setAttribute("id", "set-element-container");
@@ -128,11 +126,6 @@ const loadMenuEdit = () => {
     const saveButton = document.createElement("button");
     saveButton.setAttribute("id", "send-button");
     saveButton.setAttribute("type", "submit");
-    // REMOVE
-    const getButton = document.createElement("button");
-    getButton.setAttribute("id", "get-button");
-    getButton.textContent = "Получить";
-
     saveButton.textContent = "Отправить";
 
     document.querySelector("#main-screen").appendChild(div);
@@ -144,8 +137,71 @@ const loadMenuEdit = () => {
     form.appendChild(priceField);
     form.appendChild(valueField);
     form.appendChild(saveButton);
-    // REMOVE
-    div.appendChild(getButton);
+}
+
+const editItem = (endpoint, API) => {
+    const div = document.createElement("div");
+    div.classList.add("region-container");
+    div.setAttribute("id", "edit-element-container");
+    const h2 = document.createElement("h2");
+    h2.textContent = "Редактировать элемент";
+    const form = document.createElement("form");
+    form.setAttribute("id", "edit-menu-form");
+    const label = document.createElement("label");
+    label.setAttribute("for", "menu-select");
+    label.textContent = "Элемент:";
+    const select = document.createElement("select");
+    select.setAttribute("id", "menu-select");
+    const firstOption = document.createElement("option");
+    firstOption.setAttribute("value", "");
+    firstOption.textContent = "Выберите элемент";
+    firstOption.setAttribute("disabled", "disabled");
+    
+    API.get(endpoint).then(data => {
+        const listOfTokens = [];
+        if (data) {
+            Object.entries(data).forEach(item => {
+                listOfTokens.push(item);
+            });
+        }
+
+        for (const item of listOfTokens) {
+            const selectOption = document.createElement("option");
+
+            selectOption.setAttribute("name", item[1].element.name);
+            selectOption.setAttribute("price", item[1].element.price);
+            selectOption.setAttribute("item-value", item[1].element.value === "" ? "empty" : item[1].element.value);
+            selectOption.setAttribute("value", item[0]);
+            selectOption.textContent = item[1].element.name;
+
+            select.appendChild(selectOption);
+        }
+    });
+    
+    const editButton = document.createElement("button");
+    editButton.classList.add("edit-buttons");
+    editButton.setAttribute("id", "edit-button");
+    editButton.textContent = "Редактировать";
+
+    const deleteButton = document.createElement("button");
+    deleteButton.classList.add("edit-buttons");
+    deleteButton.setAttribute("id", "delete-button");
+    deleteButton.textContent = "Удалить";
+
+    document.querySelector("#main-screen").appendChild(div).appendChild(h2);
+    div.appendChild(form).appendChild(label).appendChild(select).appendChild(firstOption);
+    form.appendChild(editButton);
+    form.appendChild(deleteButton);
+
+    document.querySelectorAll(".edit-buttons").forEach(button => {
+        button.setAttribute("disabled", "disabled");
+    })
+
+    document.querySelector("#menu-select").addEventListener("change", event => {
+        document.querySelectorAll(".edit-buttons").forEach(button => {
+            button.removeAttribute("disabled");
+        });
+    });
 }
 
 const loadPromotions = () => {
@@ -154,4 +210,32 @@ const loadPromotions = () => {
 
 const loadReviews = () => {
 
+}
+
+const loadAlert = (alertMessage, endpoint, API) => {
+    document.querySelector("#delete-item-alert")?.remove();
+    const div = document.createElement("div");
+    div.classList.add("alert-container");
+    div.setAttribute("id", "delete-item-alert");
+    const h2 = document.createElement("h2");
+    h2.textContent = alertMessage;
+    const yesButton = document.createElement("button");
+    yesButton.setAttribute("id", "accept-button");
+    yesButton.textContent = "Да";
+    const noButton = document.createElement("button");
+    noButton.setAttribute("id", "cancel-button");
+    noButton.textContent = "Нет";
+
+    document.body.appendChild(div).appendChild(h2);
+    div.appendChild(yesButton);
+    div.appendChild(noButton);
+
+    document.querySelector("#cancel-button").addEventListener("click", event => {
+        document.querySelector(".alert-container").classList.remove("visible");
+    });
+
+    document.querySelector("#accept-button").addEventListener("click", event => {
+        document.querySelector(".alert-container").classList.remove("visible");
+        API.delete(`menu/${document.querySelector("#menu-select").value}.json`).then(response => location.reload());
+    });
 }
