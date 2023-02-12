@@ -34,4 +34,32 @@ main table, th, td {
 
 th, td {
     padding: 0 15px;
+    text-align: center;
+}
+
+#set-menu-form > * {
+    margin-inline: 0.5rem;
+}
+
+#menu-select {
+    margin-inline: 0.7rem;
+}
+
+.alert-container {
+    background-color: white;
+    z-index: 1;
+    border: 1px solid black;
+    max-width: 500px;
+    max-height: 300px;
+    position: fixed;
+    top: 10dvh;
+    margin: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    visibility: hidden;
+}
+
+.visible {
+    visibility: visible;
 }
