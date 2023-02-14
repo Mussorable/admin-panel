@@ -76,6 +76,15 @@ const loadMenuEdit = (endpoint, API) => {
         loadAlert(`Удалить элемент: `, endpoint, API);
         document.querySelector(".alert-container").classList.add("visible");
     });
+
+    document.querySelector("#edit-button").addEventListener("click", event => {
+        event.preventDefault();
+        loadEditForm(endpoint, API);
+        const select = document.querySelector("#menu-select");
+        document.querySelector("#element-edit-name").value = select.options[select.selectedIndex].getAttribute("name");
+        document.querySelector("#element-edit-price").value = select.options[select.selectedIndex].getAttribute("price");
+        document.querySelector("#element-edit-value").value = select.options[select.selectedIndex].getAttribute("item-value");
+    });
 }
 
 const addItem = () => {
@@ -237,5 +246,73 @@ const loadAlert = (alertMessage, endpoint, API) => {
     document.querySelector("#accept-button").addEventListener("click", event => {
         document.querySelector(".alert-container").classList.remove("visible");
         API.delete(`menu/${document.querySelector("#menu-select").value}.json`).then(response => location.reload());
+    });
+}
+
+const loadEditForm = (endpoint, API) => {
+    const div = document.createElement("div");
+    div.classList.add("edit-wrapper");
+    const h2 = document.createElement("h2");
+    h2.textContent = "Редактирование";
+    const label = document.createElement("label");
+    const div2 = document.createElement("div");
+    div2.classList.add("input-container");
+    const form = document.createElement("form");
+    form.setAttribute("id", "edit-element-form");
+    label.setAttribute("for", "element-edit-name");
+    const inputField = document.createElement("input");
+    const inputAttributes = {
+        placeholder: "Название элемента",
+        id: "element-edit-name",
+        minlength: 1,
+        maxlength: 30,
+        required: "required"
+    }
+    for (const attribute in inputAttributes) {
+        inputField.setAttribute(attribute, inputAttributes[attribute]);
+    }
+    const priceField = document.createElement("input");
+    priceField.style.width = "70px";
+    const priceFieldAttributes = {
+        placeholder: "Цена",
+        id: "element-edit-price",
+        minlength: 1,
+        required: "required"
+    }
+    for (const attribute in priceFieldAttributes) {
+        priceField.setAttribute(attribute, priceFieldAttributes[attribute]);
+    }
+    const valueField = document.createElement("input");
+    valueField.style.width = "70px";
+    const valueFieldAttributes = {
+        placeholder: "Вес",
+        id: "element-edit-value",
+        minlength: 1
+    }
+    for (const attribute in valueFieldAttributes) {
+        valueField.setAttribute(attribute, valueFieldAttributes[attribute]);
+    }
+
+    const saveButton = document.createElement("button");
+    saveButton.setAttribute("id", "send-edit-button");
+    saveButton.setAttribute("type", "submit");
+    saveButton.textContent = "Отправить";
+
+    document.querySelector("#edit-element-container").appendChild(div).appendChild(h2);
+    div.appendChild(div2).appendChild(form).appendChild(label).appendChild(inputField);
+    form.appendChild(priceField);
+    form.appendChild(valueField);
+    form.appendChild(saveButton);
+
+    document.querySelector("#edit-element-form").addEventListener("submit", event => { 
+        event.preventDefault();
+        const name = document.querySelector("#element-edit-name");
+        const price = document.querySelector("#element-edit-price");
+        const value = document.querySelector("#element-edit-value");
+        API.put(`menu/${document.querySelector("#menu-select").value}.json`, {element : {
+            name: name.value != "" ? name.value : "",
+            price: price.value != "" ? price.value : "",
+            value: value.value != "" ? value.value : ""
+        }});
     });
 }
