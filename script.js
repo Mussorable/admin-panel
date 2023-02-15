@@ -47,7 +47,7 @@ const loadMenuContent = (endpoint, API) => {
         Object.values(data ? data : false).forEach(item => {
             table.insertAdjacentHTML("beforeend", `
                 <tr>
-                    <td>${item.element.name}</td>
+                    <td>${item.element.name["uk-UA"]}</td>
                     <td>${item.element.price}</td>
                     <td>${item.element.value}</td>
                 </tr>
@@ -64,7 +64,11 @@ const loadMenuEdit = (endpoint, API) => {
         event.preventDefault();
         API.post(endpoint, {
             element: {
-                name: document.querySelector("#element-name").value,
+                name: {
+                    "uk-UA": document.querySelector("#element-name-ua").value,
+                    "en-US": document.querySelector("#element-name-en").value,
+                    "pl-PL": document.querySelector("#element-name-pl").value ? document.querySelector("#element-name-pl").value : document.querySelector("#element-name-en").value
+                },
                 price: document.querySelector("#element-price").value,
                 value: document.querySelector("#element-value")?.value
             }
@@ -81,7 +85,9 @@ const loadMenuEdit = (endpoint, API) => {
         event.preventDefault();
         loadEditForm(endpoint, API);
         const select = document.querySelector("#menu-select");
-        document.querySelector("#element-edit-name").value = select.options[select.selectedIndex].getAttribute("name");
+        document.querySelector("#element-edit-name-ua").value = select.options[select.selectedIndex].getAttribute("name-ua");
+        document.querySelector("#element-edit-name-en").value = select.options[select.selectedIndex].getAttribute("name-en");
+        document.querySelector("#element-edit-name-pl").value = select.options[select.selectedIndex].getAttribute("name-pl");
         document.querySelector("#element-edit-price").value = select.options[select.selectedIndex].getAttribute("price");
         document.querySelector("#element-edit-value").value = select.options[select.selectedIndex].getAttribute("item-value");
     });
@@ -98,18 +104,41 @@ const addItem = () => {
     div2.classList.add("input-container");
     const form = document.createElement("form");
     form.setAttribute("id", "set-menu-form");
-    label.setAttribute("for", "element-name");
-    const inputField = document.createElement("input");
-    const inputAttributes = {
-        placeholder: "Название элемента",
-        id: "element-name",
+    label.setAttribute("for", "element-name-ua");
+    
+    const inputFieldUA = document.createElement("input");
+    const inputAttributesUA = {
+        placeholder: "Название[UA]",
+        id: "element-name-ua",
         minlength: 1,
         maxlength: 30,
         required: "required"
     }
-    for (const attribute in inputAttributes) {
-        inputField.setAttribute(attribute, inputAttributes[attribute]);
+    for (const attribute in inputAttributesUA) {
+        inputFieldUA.setAttribute(attribute, inputAttributesUA[attribute]);
     }
+    const inputFieldEN = document.createElement("input");
+    const inputAttributesEN = {
+        placeholder: "Название[EN]",
+        id: "element-name-en",
+        minlength: 1,
+        maxlength: 30,
+        required: "required"
+    }
+    for (const attribute in inputAttributesEN) {
+        inputFieldEN.setAttribute(attribute, inputAttributesEN[attribute]);
+    }
+    const inputFieldPL = document.createElement("input");
+    const inputAttributesPL = {
+        placeholder: "Название[PL]",
+        id: "element-name-pl",
+        minlength: 1,
+        maxlength: 30
+    }
+    for (const attribute in inputAttributesPL) {
+        inputFieldPL.setAttribute(attribute, inputAttributesPL[attribute]);
+    }
+
     const priceField = document.createElement("input");
     priceField.style.width = "70px";
     const priceFieldAttributes = {
@@ -142,7 +171,9 @@ const addItem = () => {
     div.appendChild(div2)
         .appendChild(form)
         .appendChild(label)
-        .appendChild(inputField);
+        .appendChild(inputFieldUA);
+    form.appendChild(inputFieldEN);
+    form.appendChild(inputFieldPL);
     form.appendChild(priceField);
     form.appendChild(valueField);
     form.appendChild(saveButton);
@@ -177,11 +208,13 @@ const editItem = (endpoint, API) => {
         for (const item of listOfTokens) {
             const selectOption = document.createElement("option");
 
-            selectOption.setAttribute("name", item[1].element.name);
+            selectOption.setAttribute("name-ua", item[1].element.name["uk-UA"]);
+            selectOption.setAttribute("name-en", item[1].element.name["en-US"]);
+            selectOption.setAttribute("name-pl", item[1].element.name["pl-PL"]);
             selectOption.setAttribute("price", item[1].element.price);
             selectOption.setAttribute("item-value", item[1].element.value === "" ? "empty" : item[1].element.value);
             selectOption.setAttribute("value", item[0]);
-            selectOption.textContent = item[1].element.name;
+            selectOption.textContent = item[1].element.name["uk-UA"];
 
             select.appendChild(selectOption);
         }
@@ -259,18 +292,41 @@ const loadEditForm = (endpoint, API) => {
     div2.classList.add("input-container");
     const form = document.createElement("form");
     form.setAttribute("id", "edit-element-form");
-    label.setAttribute("for", "element-edit-name");
-    const inputField = document.createElement("input");
-    const inputAttributes = {
-        placeholder: "Название элемента",
-        id: "element-edit-name",
+    label.setAttribute("for", "element-edit-name-ua");
+    
+    const inputFieldUA = document.createElement("input");
+    const inputAttributesUA = {
+        placeholder: "Название элемента[UA]",
+        id: "element-edit-name-ua",
         minlength: 1,
         maxlength: 30,
         required: "required"
     }
-    for (const attribute in inputAttributes) {
-        inputField.setAttribute(attribute, inputAttributes[attribute]);
+    for (const attribute in inputAttributesUA) {
+        inputFieldUA.setAttribute(attribute, inputAttributesUA[attribute]);
     }
+    const inputFieldEN = document.createElement("input");
+    const inputAttributesEN = {
+        placeholder: "Название элемента[EN]",
+        id: "element-edit-name-en",
+        minlength: 1,
+        maxlength: 30,
+        required: "required"
+    }
+    for (const attribute in inputAttributesEN) {
+        inputFieldEN.setAttribute(attribute, inputAttributesEN[attribute]);
+    }
+    const inputFieldPL = document.createElement("input");
+    const inputAttributesPL = {
+        placeholder: "Название элемент[PL]",
+        id: "element-edit-name-pl",
+        minlength: 1,
+        maxlength: 30
+    }
+    for (const attribute in inputAttributesPL) {
+        inputFieldPL.setAttribute(attribute, inputAttributesPL[attribute]);
+    }
+
     const priceField = document.createElement("input");
     priceField.style.width = "70px";
     const priceFieldAttributes = {
@@ -299,18 +355,26 @@ const loadEditForm = (endpoint, API) => {
     saveButton.textContent = "Отправить";
 
     document.querySelector("#edit-element-container").appendChild(div).appendChild(h2);
-    div.appendChild(div2).appendChild(form).appendChild(label).appendChild(inputField);
+    div.appendChild(div2).appendChild(form).appendChild(label).appendChild(inputFieldUA);
+    form.appendChild(inputFieldEN);
+    form.appendChild(inputFieldPL);
     form.appendChild(priceField);
     form.appendChild(valueField);
     form.appendChild(saveButton);
 
     document.querySelector("#edit-element-form").addEventListener("submit", event => { 
         event.preventDefault();
-        const name = document.querySelector("#element-edit-name");
+        const nameUA = document.querySelector("#element-edit-name-ua");
+        const nameEN = document.querySelector("#element-edit-name-en");
+        const namePL = document.querySelector("#element-edit-name-pl");
         const price = document.querySelector("#element-edit-price");
         const value = document.querySelector("#element-edit-value");
         API.put(`menu/${document.querySelector("#menu-select").value}.json`, {element : {
-            name: name.value != "" ? name.value : "",
+            name: {
+               "uk-UA": nameUA.value != "" ? nameUA.value : "",
+               "en-US": nameEN.value != "" ? nameEN.value : "",
+               "pl-PL": namePL.value != "" ? namePL.value : ""
+            },
             price: price.value != "" ? price.value : "",
             value: value.value != "" ? value.value : ""
         }});
