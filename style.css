@@ -60,6 +60,27 @@ th, td {
     visibility: hidden;
 }
 
+#get-reviews {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    grid-auto-flow: row dense;
+}
+
+.review-container {
+    display: flex;
+    flex-direction: column;
+    padding: 1.3rem 1rem;
+    border-radius: 6px;
+    border: 1px solid black;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.review-container > * {
+    margin: 0;
+}
+
 .visible {
     visibility: visible;
 }

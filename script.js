@@ -9,15 +9,20 @@ document.querySelectorAll(".navi-button").forEach(button => {
         const h1 = document.createElement("h1");
         h1.textContent = button.textContent;
 
+        const BaseURL = `https://spokiy-cofee-ua-default-rtdb.europe-west1.firebasedatabase.app/`;
+        const endpoint = `menu.json`;
+        const reviewEndpoint = `reviews.json`;
+        const API = new FetchWrapper(BaseURL);
+
         document.querySelector("#main-screen")?.remove();
         document.querySelector("main").appendChild(div);
         document.querySelector("#main-screen").appendChild(h1);
         if (button.getAttribute("function").includes("menu")) {
-            const BaseURL = `https://spokiy-cofee-ua-default-rtdb.europe-west1.firebasedatabase.app/`;
-            const endpoint = `menu.json`;
-            const API = new FetchWrapper(BaseURL);
-
             loadMenu(endpoint, API);
+        }
+
+        if (button.getAttribute("function").includes("reviews")) {
+            loadReviews(reviewEndpoint, API);
         }
     });
 })
@@ -77,7 +82,7 @@ const loadMenuEdit = (endpoint, API) => {
 
     document.querySelector("#delete-button").addEventListener("click", event => {
         event.preventDefault();
-        loadAlert(`Удалить элемент: `, endpoint, API);
+        loadAlert(`Удалить элемент: ${document.querySelector("#menu-select").options[document.querySelector("#menu-select").selectedIndex].getAttribute("name-ua")}`, endpoint, API);
         document.querySelector(".alert-container").classList.add("visible");
     });
 
@@ -250,11 +255,7 @@ const loadPromotions = () => {
 
 }
 
-const loadReviews = () => {
-
-}
-
-const loadAlert = (alertMessage, endpoint, API) => {
+const loadAlert = (alertMessage, endpoint, API, uid) => {
     document.querySelector("#delete-item-alert")?.remove();
     const div = document.createElement("div");
     div.classList.add("alert-container");
@@ -278,7 +279,12 @@ const loadAlert = (alertMessage, endpoint, API) => {
 
     document.querySelector("#accept-button").addEventListener("click", event => {
         document.querySelector(".alert-container").classList.remove("visible");
-        API.delete(`menu/${document.querySelector("#menu-select").value}.json`).then(response => location.reload());
+        if (document.querySelector("h1").textContent.includes("Меню")) {
+            API.delete(`menu/${document.querySelector("#menu-select").value}.json`).then(response => location.reload());
+        }
+        if (document.querySelector("h1").textContent.includes("Отзывы")) {
+            API.delete(`reviews/${uid}.json`).then(response => location.reload());
+        }
     });
 }
 
@@ -378,5 +384,85 @@ const loadEditForm = (endpoint, API) => {
             price: price.value != "" ? price.value : "",
             value: value.value != "" ? value.value : ""
         }});
+    });
+}
+
+const loadReviews = (reviewEndpoint, API) => {
+    const div = document.createElement("div");
+    div.classList.add("region-container");
+    div.setAttribute("id", "get-reviews");
+
+    document.querySelector("#main-screen").appendChild(div);
+
+    API.get(reviewEndpoint).then(response => {
+        Object.entries(response).forEach(item => {
+            const reviewContainer = document.createElement("div");
+            reviewContainer.classList.add("review-container");
+            reviewContainer.setAttribute("uid", item[0]);
+            
+            const authorName = document.createElement("h3");
+            authorName.classList.add("author-name");
+            authorName.textContent = item[1].fields["user_name"];
+            const reviewContent = document.createElement("p");
+            reviewContent.classList.add("review-content");
+            reviewContent.textContent = item[1].fields.review;
+            const reviewTime = document.createElement("p");
+            reviewTime.classList.add("review-time");
+            reviewTime.textContent = `${item[1].fields["current_time"].day}.${item[1].fields["current_time"].month}.${item[1].fields["current_time"].year}`;
+            const buttonsContainer = document.createElement("div");
+            buttonsContainer.classList.add("buttons-container");
+            const deleteButton = document.createElement("button");
+            deleteButton.classList.add("delete-button");
+            deleteButton.textContent = "Удалить";
+            const editButton = document.createElement("button");
+            editButton.classList.add("edit-button");
+            editButton.textContent = "Редактировать";
+
+
+            document.querySelector("#get-reviews").appendChild(reviewContainer);
+            reviewContainer.appendChild(authorName);
+            reviewContainer.appendChild(reviewContent);
+            reviewContainer.appendChild(reviewTime);
+            reviewContainer.appendChild(buttonsContainer);
+            buttonsContainer.appendChild(editButton);
+            buttonsContainer.appendChild(deleteButton);
+        });
+
+        document.querySelectorAll(".delete-button").forEach(button => {
+            button.addEventListener("click", event => {
+                loadAlert(`Удалить этот отзыв?`, reviewEndpoint, API, event.target.parentNode.parentNode.getAttribute("uid"));
+                document.querySelector(".alert-container").classList.add("visible");
+            });
+        });
+
+        document.querySelectorAll(".edit-button").forEach(button => {
+            button.addEventListener("click", event => {
+                document.querySelector("#edit-review")?.remove();
+                API.get(`reviews/${event.target.parentNode.parentNode.getAttribute("uid")}.json`).then(resp => editReview(resp.fields.review, event.target.parentNode.parentNode.getAttribute("uid"), API));
+            });
+        });
+    });
+}
+
+const editReview = (data, uid, API) => {
+    const div = document.createElement("div");
+    div.classList.add("region-container");
+    div.setAttribute("id" ,"edit-review");
+    const h2 = document.createElement("h2");
+    h2.textContent = `Редактировать элемент`;
+    const form = document.createElement("form");
+    form.setAttribute("id", "edit-review-form");
+    const editReviewContent = document.createElement("textarea");
+    editReviewContent.value = data;
+    const sumbitButton = document.createElement("button");
+    sumbitButton.textContent = "Отправить";
+
+    document.querySelector("#main-screen").appendChild(div).appendChild(h2);
+    div.appendChild(form).appendChild(editReviewContent);
+    form.appendChild(sumbitButton);
+
+    form.addEventListener("submit", event => {
+        event.preventDefault();
+        API.put(`reviews/${uid}/fields/review.json`, editReviewContent.value).then(resp => location.reload());
     });
 }
